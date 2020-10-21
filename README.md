@@ -2,4 +2,8 @@
 Friar Tuck is a tool
 
 # How to use Tuck
-Do stuff
+
+Run with 
+```
+python src/main.py
+```
