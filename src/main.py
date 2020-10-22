@@ -31,6 +31,13 @@ __maintainer__ = 'Travis Petersheim'
 __email__ = 'travispetersheim@gmail.com'
 __status__ = 'prototype'
 
+# Functions
+# Funciton for the button click
+def on_button_clicked():
+        alert = QMessageBox()
+        alert.setText("Dumb tucker!")
+        alert.exec_()
+
 # Create the main window
 app = QApplication([])
 window = QWidget()
@@ -59,9 +66,3 @@ window.show()
 
 # Run the application
 app.exec_()
-
-# Funciton for the button click
-def on_button_clicked():
-        alert = QMessageBox()
-        alert.setText("Dumb tucker!")
-        alert.exec_()
