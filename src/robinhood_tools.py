@@ -49,6 +49,7 @@ def RobinhoodLogin(username = os.environ.get("robinhood_username"),
 
     # Try to login
     try:
+# Error: This line causes "QCoreApplication::exec: The event loop is already running" loop
 #        rs.login(robin_user, robin_pass)
         result = "Successful Login to Robinhood as: " + username
     except Exception as e:
