@@ -14,7 +14,7 @@ import os
 import sys
 
 # Libraries
-from PyQt5.QtWidgets import (QApplication, QBoxLayout, QGridLayout,
+from PyQt5.QtWidgets import (QApplication, QBoxLayout, QGridLayout, QVBoxLayout,
                              QHBoxLayout, QLabel, QMessageBox, QPushButton,
                              QWidget, QLineEdit)
 
@@ -36,22 +36,20 @@ class App(QWidget):
 # Initialization
         def __init__(self):
                 super().__init__()
-                self.setWindowTitle = 'Tuck'
-                self.setWindowWidth = 640
-                self.setWindowHeight = 480
+                self.setWindowTitle("Tuck")
                 self.main()
 
 # Main application
         def main(self):
                 # Build the window layout
-                mainLayout = QGridLayout()
+                mainLayout = QVBoxLayout()
                 self.setLayout(mainLayout)
                 userNameLayout = QHBoxLayout()
-                mainLayout.addLayout(userNameLayout, 0, 0, 0, 0)
+                mainLayout.addLayout(userNameLayout)
                 passwordLayout = QHBoxLayout()
-                mainLayout.addLayout(passwordLayout, 1, 0, 1, 0)
+                mainLayout.addLayout(passwordLayout)
                 loginLayout = QHBoxLayout()
-                mainLayout.addLayout(loginLayout, 2, 0, 2, 0)
+                mainLayout.addLayout(loginLayout)
 
                 # Add a label for username
                 usernameLabel = QLabel("Username: ")
