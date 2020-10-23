@@ -33,13 +33,13 @@ __status__ = 'prototype'
 
 class App(QWidget):
 # Functions
-# Initialization
+        # Initialization
         def __init__(self):
                 super().__init__()
                 self.setWindowTitle("Tuck")
                 self.main()
 
-# Main application
+        # Main application
         def main(self):
                 # Build the window layout
                 mainLayout = QVBoxLayout()
