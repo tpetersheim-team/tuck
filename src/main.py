@@ -43,8 +43,9 @@ app = QApplication([])
 window = QWidget()
 
 # Build the window layout
-topLayout = QHBoxLayout()
 mainLayout = QGridLayout()
+window.setLayout(mainLayout)
+topLayout = QHBoxLayout()
 mainLayout.addLayout(topLayout, 0, 0, 1, 2)
 
 # Add a label for Hello Tuck
@@ -60,8 +61,8 @@ topLayout.addWidget(button)
 button.clicked.connect(on_button_clicked)
 button.setDefault(True)
 
-# Set the layout
-window.setLayout(mainLayout)
+# Show layout
+window.resize(640, 480)
 window.show()
 
 # Run the application
