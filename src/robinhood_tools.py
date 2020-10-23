@@ -47,7 +47,6 @@ def RobinhoodLogin(username = os.environ.get("robinhood_username"),
     robin_user = os.environ.get("robinhood_username")
     robin_pass = os.environ.get("robinhood_password")
 
-    print(robin_user, robin_pass)
     # Try to login
     try:
 #        rs.login(robin_user, robin_pass)
