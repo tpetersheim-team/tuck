@@ -1,5 +1,5 @@
 # Tuck
-Friar Tuck is a tool
+Friar Tuck is a tool that makes Robinhood more useful
 
 # How to use Tuck
 

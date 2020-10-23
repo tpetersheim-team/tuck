@@ -40,21 +40,21 @@ def RobinhoodLogin(username = os.environ.get("robinhood_username"),
                    by_sms = True):
     
     # Set the username and password envinroment variables as passed in
-    os.environ["robinhood_username", "robinhood_password"] = username, password
+    os.environ["robinhood_username"] = username
+    os.environ["robinhood_password"] = password
 
     # Grab the username and password environment variables
     robin_user = os.environ.get("robinhood_username")
     robin_pass = os.environ.get("robinhood_password")
 
+    print(robin_user, robin_pass)
     # Try to login
     try:
-        rs.login(username = robin_user,
-        password = robin_pass,
-        expiresIn = expiresIn,
-        by_sms = by_sms)
-        print("Successful Login to Robinhood as: ", username)
+#        rs.login(robin_user, robin_pass)
+        result = "Successful Login to Robinhood as: " + username
     except Exception as e:
-        print("Login Error", e)
+        result = "Login Error: {}".format(e)
+    return(result)
 
 # Logout Function
 # Logs out of the Robinhood account
@@ -69,12 +69,12 @@ def RobinhoodOrderByDollar(symbol, dollars, timeInForce = 'gtc', extendedHours =
                                         dollars,
                                         timeInForce,
                                         extendedHours)
-        # TODO report successful purchase, including shares and price
-        shares = ""
-        share_price = 0.0
-        print("Successful order for: {} shares of {} at {}".format(shares, symbol, share_price))  
+        share_price = float(rs.stocks.get_latest_price(symbol, includeExtendedHours = True)[0])
+        shares = str(dollars/share_price)
+        result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price) 
     except Exception as e:
-        print("Error purchasing ${} of {}./n{}".format(dollars, symbol, e))
+        result = "Error purchasing ${} of {}./n{}".format(dollars, symbol, e)
+    return(result)
 
 # Order by shares
 # These are market orders but can be fractional
@@ -84,9 +84,9 @@ def RobinhoodOrderByShare(symbol, quantity, timeInForce = 'gtc', extendedHours =
                                           quantity,
                                           timeInForce,
                                           extendedHours)
-        # TODO report successful purchase, including shares and price   
-        shares = ""
-        share_price = 0.0
-        print("Successful order for: {} shares of {} at {}".format(shares, symbol, share_price))        
+        share_price = float(rs.stocks.get_latest_price(symbol, includeExtendedHours = True)[0])
+        shares = quantity
+        result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price)        
     except Exception as e:
-        print("Error purchasing {} shares of {}./n{}".format(quantity, symbol, e))
+        result = "Error purchasing {} shares of {}./n{}".format(quantity, symbol, e)
+    return(result)
