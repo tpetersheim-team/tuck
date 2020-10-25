@@ -48,6 +48,8 @@ class App(QWidget):
                 mainLayout.addLayout(userNameLayout)
                 passwordLayout = QHBoxLayout()
                 mainLayout.addLayout(passwordLayout)
+                mfaLayout = QHBoxLayout()
+                mainLayout.addLayout(mfaLayout)
                 loginLayout = QHBoxLayout()
                 mainLayout.addLayout(loginLayout)
 
@@ -64,10 +66,19 @@ class App(QWidget):
                 passwordLabel = QLabel("Password: ")
                 passwordLayout.addWidget(passwordLabel)
                 passwordLabel.show()
-
+# TODO don't display the password
                 # Add a text box for password
                 self.passwordTextBox = QLineEdit()
                 passwordLayout.addWidget(self.passwordTextBox)
+                
+                # Add a label for MFA
+                mfaLabel = QLabel("MFA Token: ")
+                mfaLayout.addWidget(mfaLabel)
+                mfaLabel.show()
+
+                # Add a text box for MFA
+                self.mfaTextBox = QLineEdit()
+                mfaLayout.addWidget(self.mfaTextBox)
 
                 # Add a Login button
                 loginButton = QPushButton("Login", self)

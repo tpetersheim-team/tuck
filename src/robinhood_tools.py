@@ -36,8 +36,9 @@ __status__ = 'prototype'
 # However if a new username and password is passed in it saves it to the environment variable
 def RobinhoodLogin(username = os.environ.get("robinhood_username"),
                    password = os.environ.get("robinhood_password"),
+                   mfa_code = 'mfa',
                    expiresIn = 86400,
-                   by_sms = True):
+                   by_sms = False):
     
     # Set the username and password envinroment variables as passed in
     os.environ["robinhood_username"] = username
@@ -49,8 +50,7 @@ def RobinhoodLogin(username = os.environ.get("robinhood_username"),
 
     # Try to login
     try:
-# Error: This line causes: QCoreApplication::exec: The event loop is already running" loop
-#        rs.login(robin_user, robin_pass)
+        rs.login(robin_user, robin_pass, mfa_code = mfa_code)
         result = "Successful Login to Robinhood as: " + username
     except Exception as e:
         result = "Login Error: {}".format(e)
