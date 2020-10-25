@@ -15,6 +15,7 @@ import sys
 
 # Libraries
 import robin_stocks as rs
+from stockAPI import StockAPI
 
 # Own modules
 # None
@@ -29,64 +30,67 @@ __maintainer__ = 'Travis Petersheim'
 __email__ = 'travispetersheim@gmail.com'
 __status__ = 'prototype'
 
-# Functions
+# Make into class
+class RobinhoodAPI(StockAPI):
 
-# Login Function
-# This login function uses the environment variable username and password by default
-# However if a new username and password is passed in it saves it to the environment variable
-def RobinhoodLogin(username = os.environ.get("robinhood_username"),
-                   password = os.environ.get("robinhood_password"),
-                   mfa_code = 'mfa',
-                   expiresIn = 86400,
-                   by_sms = False):
-    
-    # Set the username and password envinroment variables as passed in
-    os.environ["robinhood_username"] = username
-    os.environ["robinhood_password"] = password
+    # Login Function
+    # This login function uses the environment variable username and password by default
+    # However if a new username and password is passed in it saves it to the environment variable
+    def Login(self, username = os.environ.get("robinhood_username"),
+                    password = os.environ.get("robinhood_password"),
+                    mfa_code = 'mfa'):
+        
+        # Set the username and password envinroment variables as passed in
+        os.environ["robinhood_username"] = username
+        os.environ["robinhood_password"] = password
 
-    # Grab the username and password environment variables
-    robin_user = os.environ.get("robinhood_username")
-    robin_pass = os.environ.get("robinhood_password")
+        # Grab the username and password environment variables
+        robin_user = os.environ.get("robinhood_username")
+        robin_pass = os.environ.get("robinhood_password")
 
-    # Try to login
-    try:
-        rs.login(robin_user, robin_pass, mfa_code = mfa_code)
-        result = "Successful Login to Robinhood as: " + username
-    except Exception as e:
-        result = "Login Error: {}".format(e)
-    return(result)
+        # Try to login
+        try:
+            rs.login(robin_user, robin_pass, mfa_code = mfa_code)
+            result = "Successful Login to Robinhood as: " + username
+        except Exception as e:
+            result = "Login Error: {}".format(e)
+        return(result)
 
-# Logout Function
-# Logs out of the Robinhood account
-def RobinhoodLogout():
-    rs.logout()
+    # Logout Function
+    # Logs out of the Robinhood account
+    def Logout(self):
+        rs.logout()
 
-# Order by dollar amount
-# These are market orders by default 
-def RobinhoodOrderByDollar(symbol, dollars, timeInForce = 'gtc', extendedHours = False):
-    try:
-        rs.orders.order_buy_fractional_by_price(symbol,
-                                        dollars,
-                                        timeInForce,
-                                        extendedHours)
-        share_price = float(rs.stocks.get_latest_price(symbol, includeExtendedHours = True)[0])
-        shares = str(dollars/share_price)
-        result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price) 
-    except Exception as e:
-        result = "Error purchasing ${} of {}./n{}".format(dollars, symbol, e)
-    return(result)
+    # Order by dollar amount
+    # These are market orders by default 
+    def OrderByDollar(self, symbol, dollars):
+        try:
+            rs.orders.order_buy_fractional_by_price(symbol, dollars)
+            share_price = float(rs.stocks.get_latest_price(symbol)[0])
+            shares = str(dollars/share_price)
+            result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price) 
+        except Exception as e:
+            result = "Error purchasing ${} of {}./n{}".format(dollars, symbol, e)
+        return(result)
 
-# Order by shares
-# These are market orders but can be fractional
-def RobinhoodOrderByShare(symbol, quantity, timeInForce = 'gtc', extendedHours = False):
-    try:
-        rs.orders.order_buy_fractional_by_quantity(symbol,
-                                          quantity,
-                                          timeInForce,
-                                          extendedHours)
-        share_price = float(rs.stocks.get_latest_price(symbol, includeExtendedHours = True)[0])
-        shares = quantity
-        result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price)        
-    except Exception as e:
-        result = "Error purchasing {} shares of {}./n{}".format(quantity, symbol, e)
-    return(result)
+    # Order by shares
+    # These are market orders but can be fractional
+    def OrderByShare(self, symbol, quantity):
+        try:
+            rs.orders.order_buy_fractional_by_quantity(symbol, quantity)
+            share_price = float(rs.stocks.get_latest_price(symbol)[0])
+            shares = quantity
+            result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price)        
+        except Exception as e:
+            result = "Error purchasing {} shares of {}./n{}".format(quantity, symbol, e)
+        return(result)
+
+    # Retrieve the current portfolio
+    # More definition
+    def RetrievePortfolio(self):
+        pass
+
+    # Tretrieve the current portfolio
+    # More definition
+    def RebalancePortfolio(self):
+        pass

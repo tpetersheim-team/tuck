@@ -19,7 +19,9 @@ from PyQt5.QtWidgets import (QApplication, QBoxLayout, QGridLayout, QVBoxLayout,
                              QWidget, QLineEdit)
 
 # Own modules
+
 import robinhood_tools
+from stockAPI import StockAPI
 
 # Header release information
 __author__ = 'Travis Petersheim & Michael Reichenberger'
@@ -38,6 +40,7 @@ class App(QWidget):
                 super().__init__()
                 self.setWindowTitle("Tuck")
                 self.main()
+                self.stockAPI = robinhood_tools.RobinhoodAPI()
 
         # Main application
         def main(self):
@@ -66,10 +69,11 @@ class App(QWidget):
                 passwordLabel = QLabel("Password: ")
                 passwordLayout.addWidget(passwordLabel)
                 passwordLabel.show()
-# TODO don't display the password
+                
                 # Add a text box for password
                 self.passwordTextBox = QLineEdit()
                 passwordLayout.addWidget(self.passwordTextBox)
+                self.passwordTextBox.setEchoMode(QLineEdit.Password)
                 
                 # Add a label for MFA
                 mfaLabel = QLabel("MFA Token: ")
@@ -95,7 +99,8 @@ class App(QWidget):
         def on_button_clicked(self):
                 username = self.usernameTextBox.text()
                 password = self.passwordTextBox.text()
-                loginResult = robinhood_tools.RobinhoodLogin(username, password)
+                mfa = self.mfaTextBox.text()
+                loginResult = self.stockAPI.Login(username, password, mfa)
                 alert = QMessageBox()
                 alert.setText(loginResult)
                 alert.exec_()
