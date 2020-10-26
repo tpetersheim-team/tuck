@@ -12,15 +12,14 @@ from __future__ import print_function
 # Built-in/Generic Imports
 import os
 import sys
+from typing import Text
 
 # Libraries
-from PyQt5.QtWidgets import (QApplication, QBoxLayout, QGridLayout, QVBoxLayout,
-                             QHBoxLayout, QLabel, QMessageBox, QPushButton,
-                             QWidget, QLineEdit)
+from PyQt5.QtWidgets import (QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget)
 
 # Own modules
-
-import robinhood_tools
+from robinhoodAPI import RobinhoodAPI
+from screens.loginWindow import LoginWindow
 from stockAPI import StockAPI
 
 # Header release information
@@ -33,78 +32,50 @@ __maintainer__ = 'Travis Petersheim'
 __email__ = 'travispetersheim@gmail.com'
 __status__ = 'prototype'
 
-class App(QWidget):
+class App(QMainWindow):
 # Functions
         # Initialization
         def __init__(self):
                 super().__init__()
                 self.setWindowTitle("Tuck")
+                self.resize(640, 400)
+                self.stockAPI: StockAPI = RobinhoodAPI()
                 self.main()
-                self.stockAPI = robinhood_tools.RobinhoodAPI()
 
         # Main application
         def main(self):
                 # Build the window layout
-                mainLayout = QVBoxLayout()
+                mainLayout = QVBoxLayout(self)
                 self.setLayout(mainLayout)
-                userNameLayout = QHBoxLayout()
-                mainLayout.addLayout(userNameLayout)
-                passwordLayout = QHBoxLayout()
-                mainLayout.addLayout(passwordLayout)
-                mfaLayout = QHBoxLayout()
-                mainLayout.addLayout(mfaLayout)
-                loginLayout = QHBoxLayout()
-                mainLayout.addLayout(loginLayout)
 
-                # Add a label for username
-                usernameLabel = QLabel("Username: ")
-                userNameLayout.addWidget(usernameLabel)
-                usernameLabel.show()
-
-                # Add a text box for username
-                self.usernameTextBox = QLineEdit()
-                userNameLayout.addWidget(self.usernameTextBox)
-
-                # Add a label for password
-                passwordLabel = QLabel("Password: ")
-                passwordLayout.addWidget(passwordLabel)
-                passwordLabel.show()
-                
-                # Add a text box for password
-                self.passwordTextBox = QLineEdit()
-                passwordLayout.addWidget(self.passwordTextBox)
-                self.passwordTextBox.setEchoMode(QLineEdit.Password)
-                
-                # Add a label for MFA
-                mfaLabel = QLabel("MFA Token: ")
-                mfaLayout.addWidget(mfaLabel)
-                mfaLabel.show()
-
-                # Add a text box for MFA
-                self.mfaTextBox = QLineEdit()
-                mfaLayout.addWidget(self.mfaTextBox)
-
-                # Add a Login button
-                loginButton = QPushButton("Login", self)
-                loginLayout.addWidget(loginButton)
-
-                # Setup the login button-click action
-                loginButton.clicked.connect(self.on_button_clicked)
-                loginButton.setDefault(True)
+                self.loginLabel = QLabel("Login required", self)
+                self.width = 200
+                mainLayout.addWidget(self.loginLabel)
+                self.loginLabel.show()
 
                 # Show layout
                 self.show()
-                
-        # Funciton for the button click
-        def on_button_clicked(self):
-                username = self.usernameTextBox.text()
-                password = self.passwordTextBox.text()
-                mfa = self.mfaTextBox.text()
-                loginResult = self.stockAPI.Login(username, password, mfa)
-                alert = QMessageBox()
-                alert.setText(loginResult)
-                alert.exec_()
 
+                self.promptLoginIfNeeded()
+
+        def promptLoginIfNeeded(self):
+                if True: # TODO: Check if not logged in
+                        self.loginWindow = LoginWindow(self, self.stockAPI)
+                        self.loginWindow.loginSuccess.connect(self.onLoginSuccessful)
+                        self.loginWindow.show()
+                else:
+                        self.showLoginMessage()
+
+        def onLoginSuccessful(self):
+                self.showLoginMessage()
+                self.loginWindow.close()
+        
+        def showLoginMessage(self):
+                self.loginLabel.setText("You are logged in!")
+
+
+
+ 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()

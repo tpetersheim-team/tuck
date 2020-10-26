@@ -15,7 +15,7 @@ import sys
 
 # Libraries
 import robin_stocks as rs
-from stockAPI import StockAPI
+from stockAPI import StockAPILoginException, StockAPI
 
 # Own modules
 # None
@@ -51,10 +51,9 @@ class RobinhoodAPI(StockAPI):
         # Try to login
         try:
             rs.login(robin_user, robin_pass, mfa_code = mfa_code)
-            result = "Successful Login to Robinhood as: " + username
+            return True
         except Exception as e:
-            result = "Login Error: {}".format(e)
-        return(result)
+            raise StockAPILoginException(e)
 
     # Logout Function
     # Logs out of the Robinhood account

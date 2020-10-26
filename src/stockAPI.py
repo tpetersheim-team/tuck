@@ -38,3 +38,6 @@ class StockAPI():
 
     def RebalancePortfolio(self):
         pass
+
+class StockAPILoginException(Exception):
+    pass
