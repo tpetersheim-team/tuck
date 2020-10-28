@@ -21,10 +21,13 @@ class StockAPI():
     def __init__(self):
             super().__init__()
 
-    def Login(self, username, password, mfa_code):
+    def Login(self, username, password, stayLoggedIn, mfaCode) -> bool:
         pass
 
-    def Logout(self):
+    def LoggedIn(self) -> bool:
+        pass
+
+    def Logout(self) -> None:
         pass
     
     def OrderByDollar(self, symbol, dollars):

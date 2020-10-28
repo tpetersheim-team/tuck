@@ -38,7 +38,8 @@ class RobinhoodAPI(StockAPI):
     # However if a new username and password is passed in it saves it to the environment variable
     def Login(self, username = os.environ.get("robinhood_username"),
                     password = os.environ.get("robinhood_password"),
-                    mfa_code = 'mfa'):
+                    stayLoggedIn = True,
+                    mfaCode = 'mfa'):
         
         # Set the username and password envinroment variables as passed in
         os.environ["robinhood_username"] = username
@@ -50,10 +51,18 @@ class RobinhoodAPI(StockAPI):
 
         # Try to login
         try:
-            rs.login(robin_user, robin_pass, mfa_code = mfa_code)
+            rs.login(robin_user, robin_pass, store_session = stayLoggedIn, mfa_code = mfaCode)
             return True
         except Exception as e:
             raise StockAPILoginException(e)
+
+    # Check if the user is currently logged in
+    # Credentials don't matter if there is a valid stored session auth_token
+    def LoggedIn(self):
+        try:
+            return self.Login('a', 'b')
+        except Exception as e:
+            return False
 
     # Logout Function
     # Logs out of the Robinhood account

@@ -12,10 +12,9 @@ from __future__ import print_function
 # Built-in/Generic Imports
 import os
 import sys
-from typing import Text
 
 # Libraries
-from PyQt5.QtWidgets import (QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QAction, QApplication, QLabel, QMainWindow, QVBoxLayout)
 
 # Own modules
 from robinhoodAPI import RobinhoodAPI
@@ -40,7 +39,30 @@ class App(QMainWindow):
                 self.setWindowTitle("Tuck")
                 self.resize(640, 400)
                 self.stockAPI: StockAPI = RobinhoodAPI()
+                self.setupMenuBar()
                 self.main()
+
+        def setupMenuBar(self):
+                # Build the menu bar
+                mainMenu = self.menuBar()
+                fileMenu = mainMenu.addMenu('&File')
+                
+                # Logout menu bar action
+                self.logoutAction = QAction('&Logout', self)
+                self.logoutAction.setShortcut("Ctrl+O")
+                self.logoutAction.setStatusTip("Logout")
+                self.logoutAction.triggered.connect(self.logout)
+                self.logoutAction.setVisible(False)
+                fileMenu.addAction(self.logoutAction)
+                
+                # Login menu bar action
+                self.loginAction = QAction('&Login', self)
+                self.loginAction.setShortcut("Ctrl+L")
+                self.loginAction.setStatusTip("Login")
+                self.loginAction.triggered.connect(self.showLoginWindow)
+                fileMenu.addAction(self.loginAction)
+                
+                self.statusBar()
 
         # Main application
         def main(self):
@@ -49,29 +71,39 @@ class App(QMainWindow):
                 self.setLayout(mainLayout)
 
                 self.loginLabel = QLabel("Login required", self)
-                self.width = 200
+                self.loginLabel.move(20, 20)
+                self.loginLabel.setFixedWidth(200)
                 mainLayout.addWidget(self.loginLabel)
-                self.loginLabel.show()
 
                 # Show layout
                 self.show()
 
                 self.promptLoginIfNeeded()
+        
+        def logout(self):
+                self.stockAPI.Logout()
+                self.toggleLogin(False)
 
         def promptLoginIfNeeded(self):
-                if True: # TODO: Check if not logged in
-                        self.loginWindow = LoginWindow(self, self.stockAPI)
-                        self.loginWindow.loginSuccess.connect(self.onLoginSuccessful)
-                        self.loginWindow.show()
+                if self.stockAPI.LoggedIn():
+                        self.toggleLogin(True)
                 else:
-                        self.showLoginMessage()
+                        self.showLoginWindow()
+        
+        def showLoginWindow(self):
+                self.loginWindow = LoginWindow(self, self.stockAPI)
+                self.loginWindow.loginSuccess.connect(self.onLoginSuccessful)
+                self.loginWindow.show()
 
         def onLoginSuccessful(self):
-                self.showLoginMessage()
+                self.toggleLogin(True)
                 self.loginWindow.close()
-        
-        def showLoginMessage(self):
-                self.loginLabel.setText("You are logged in!")
+
+        def toggleLogin(self, loggedIn: bool):
+                self.loginLabel.setText("You are logged in!" if loggedIn else "You are logged out!")
+                self.logoutAction.setVisible(loggedIn)
+                self.loginAction.setVisible(not loggedIn)
+                
 
 
 

@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-GUI for Tuck
-More description here
+Login Window for Tuck
 """
 
 # Futures
@@ -16,11 +15,12 @@ from typing import Text
 from PyQt5.QtCore import pyqtSignal
 
 # Libraries
-from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, 
-                             QMessageBox, QPushButton, QWidget, QLineEdit)
+from PyQt5.QtWidgets import (QCheckBox, QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QWidget, QLineEdit)
 
 # Own modules
 from stockAPI import StockAPI
+from screens.utilities.alertUtility import AlertUtility
 
 # Header release information
 __author__ = 'Travis Petersheim & Michael Reichenberger'
@@ -39,7 +39,6 @@ class LoginWindow(QMainWindow):
         def __init__(self, parent, stockAPI: StockAPI):
                 super(LoginWindow, self).__init__(parent)
                 self.stockAPI: StockAPI = stockAPI
-                self.successfulLogin: bool = False
                 self.setWindowTitle("Login")
                 self.main()
 
@@ -57,13 +56,18 @@ class LoginWindow(QMainWindow):
                 mainLayout.addLayout(passwordLayout)
                 mfaLayout = QHBoxLayout(self)
                 mainLayout.addLayout(mfaLayout)
-                loginLayout = QHBoxLayout(self)
-                mainLayout.addLayout(loginLayout)
+                stayLoggedInCheckboxLayout = QHBoxLayout(self)
+                mainLayout.addLayout(stayLoggedInCheckboxLayout)
+                loginButtonLayout = QHBoxLayout(self)
+                mainLayout.addLayout(loginButtonLayout)
+
+                labelWidth: int = 65
 
                 # Add a label for username
-                usernameLabel = QLabel("Username: ", self)
-                userNameLayout.addWidget(usernameLabel)
-                usernameLabel.show()
+                userNameLabel = QLabel("Username: ", self)
+                userNameLabel.setFixedWidth(labelWidth)
+                userNameLayout.addWidget(userNameLabel)
+                userNameLabel.show()
 
                 # Add a text box for username
                 self.usernameTextBox = QLineEdit(self)
@@ -71,6 +75,7 @@ class LoginWindow(QMainWindow):
 
                 # Add a label for password
                 passwordLabel = QLabel("Password: ", self)
+                passwordLabel.setFixedWidth(labelWidth)
                 passwordLayout.addWidget(passwordLabel)
                 passwordLabel.show()
                 
@@ -81,6 +86,7 @@ class LoginWindow(QMainWindow):
                 
                 # Add a label for MFA
                 mfaLabel = QLabel("MFA Token: ", self)
+                mfaLabel.setFixedWidth(labelWidth)
                 mfaLayout.addWidget(mfaLabel)
                 mfaLabel.show()
 
@@ -88,38 +94,40 @@ class LoginWindow(QMainWindow):
                 self.mfaTextBox = QLineEdit(self)
                 mfaLayout.addWidget(self.mfaTextBox)
 
+                # Add checkbox to save login
+                self.stayLoggedInCheckbox = QCheckBox(self)
+                self.stayLoggedInCheckbox.setFixedWidth(15)
+                stayLoggedInCheckboxLayout.addWidget(self.stayLoggedInCheckbox)
+
+                # add label for checkbox to save login
+                stayLoggedInLabel = QLabel(" Stay Logged In?")
+                stayLoggedInCheckboxLayout.addWidget(stayLoggedInLabel)
+
                 # Add a Login button
                 loginButton = QPushButton("Login", self)
-                loginLayout.addWidget(loginButton)
+                loginButtonLayout.addWidget(loginButton)
 
                 # Setup the login button-click action
-                loginButton.clicked.connect(self.on_login_button_clicked)
+                loginButton.clicked.connect(self.onLoginButtonClicked)
                 loginButton.setDefault(True)
 
-                # Show layout
-                # self.show()
-                
         # Funciton for the button click
-        def on_login_button_clicked(self):
+        def onLoginButtonClicked(self):
                 username = self.usernameTextBox.text()
                 password = self.passwordTextBox.text()
                 mfa = self.mfaTextBox.text()
+                stayLoggedIn = self.stayLoggedInCheckbox.isChecked()
 
-                self.successfulLogin: bool = False
-                message: Text = "Something weird happened. This text should never get used."
+                if not username or not password or not mfa:
+                    AlertUtility.ShowAlert("Username, password, and mfa required")
+                    return
+
                 try:
-                        if self.stockAPI.Login(username, password, mfa):
-                                message = f"Successful Login to Robinhood as {username}"
-                                self.successfulLogin = True
+                        if self.stockAPI.Login(username, password, stayLoggedIn, mfa):
+                            AlertUtility.ShowAlert(f"Successful Login to Robinhood as {username}", self.onAlertButtonClicked)
                 except Exception as e:
-                        message = f"Login Error: {e}"
+                        AlertUtility.ShowAlert(f"Login Error: {e}")
 
-                alert = QMessageBox()
-                if self.successfulLogin:
-                        alert.buttonClicked.connect(self.on_alert_button_clicked)
-                alert.setText(message)
-                alert.exec_()
-
-        def on_alert_button_clicked(self):
+        def onAlertButtonClicked(self):
             self.loginSuccess.emit()
             
