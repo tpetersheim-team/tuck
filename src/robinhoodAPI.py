@@ -15,7 +15,7 @@ import sys
 
 # Libraries
 import robin_stocks as rs
-from stockAPI import StockAPILoginException, StockAPI
+from stockAPI import StockAPIException, StockAPI
 
 # Own modules
 # None
@@ -54,7 +54,7 @@ class RobinhoodAPI(StockAPI):
             rs.login(robin_user, robin_pass, store_session = stayLoggedIn, mfa_code = mfaCode)
             return True
         except Exception as e:
-            raise StockAPILoginException(e)
+            raise StockAPIException(e)
 
     # Check if the user is currently logged in
     # Credentials don't matter if there is a valid stored session auth_token
@@ -62,12 +62,15 @@ class RobinhoodAPI(StockAPI):
         try:
             return self.Login('a', 'b')
         except Exception as e:
-            return False
+            raise StockAPIException(e)
 
     # Logout Function
     # Logs out of the Robinhood account
     def Logout(self):
-        rs.logout()
+        try:
+            rs.logout()
+        except Exception as e:
+            raise StockAPIException(e)
 
     # Order by dollar amount
     # These are market orders by default 
@@ -77,9 +80,9 @@ class RobinhoodAPI(StockAPI):
             share_price = float(rs.stocks.get_latest_price(symbol)[0])
             shares = str(dollars/share_price)
             result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price) 
+            return(result)
         except Exception as e:
-            result = "Error purchasing ${} of {}./n{}".format(dollars, symbol, e)
-        return(result)
+            raise StockAPIException(e)
 
     # Order by shares
     # These are market orders but can be fractional
@@ -88,17 +91,66 @@ class RobinhoodAPI(StockAPI):
             rs.orders.order_buy_fractional_by_quantity(symbol, quantity)
             share_price = float(rs.stocks.get_latest_price(symbol)[0])
             shares = quantity
-            result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price)        
+            result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price) 
+            return(result)       
         except Exception as e:
-            result = "Error purchasing {} shares of {}./n{}".format(quantity, symbol, e)
-        return(result)
+            raise StockAPIException(e)
 
     # Retrieve the current portfolio
-    # More definition
+    # The build_holdings function returns a dictionary:
+    # Each holding is an item in the holdings dictionary
+    # Keys are the individual stocks
+    # Each stock is another dictionary with keys: 
+    # ['price', 'quantity', 'average_buy_price', 'equity', 'percent_change', 'equity_change', 'type', 'name', 'id', 'pe_ratio', 'percentage']
     def RetrievePortfolio(self):
-        pass
+        try:
+            # Pull down an update of the current holdings
+            self.portfolio = rs.build_holdings()
+            # Update the user profile
+            self.profile = rs.build_user_profile()
+        except Exception as e:
+            raise StockAPIException(e)
 
     # Tretrieve the current portfolio
-    # More definition
-    def RebalancePortfolio(self):
-        pass
+    # target_distribution must be provided as a dictionary of stocks with percentages
+    def RebalancePortfolio(self, target_distribution):
+        try:
+            orders = {}
+            # Get current portfolio and profile data
+            self.RetrievePortfolio()
+            # Determine the present distributions
+            # Robin Stocks is supposed to have determined the % of your portfolio but the number is wrong so we fix it :)
+            for name, stock in self.portfolio.items():
+                stock['percentage'] = float(stock['equity'])/float(self.profile['equity'])
+                # Positive differences = you have too much
+                # Negative differences = you need more
+                # All of this math is based on a percentage of your portfolio and will be multiplied out just as the
+                #   orders go through to avoid momentary fluctuations
+                # Assuming this stock is in the target distribution, this will work
+                try:
+                    difference = target_distribution[name]['percentage'] - stock['percentage']
+                # Otherwise set the difference to be the entire amount
+                except:
+                    difference = stock['percentage']
+                orders[name] = difference
+            for name, stock in target_distribution.items():
+                if stock.has_key(name):
+                    pass
+                else:
+                    orders[name] = -stock['percentage']
+            # Execute sells
+            for name, sell in orders.items():
+                if sell[''] > 0:
+                    self.OrderByDollar(name, sell*self.profile['equity'])
+                else:
+                    pass
+            # Execute buys
+            for name, buy in orders.items():
+                if buy < 0:
+                    self.OrderByDollar(name, buy*self.profile['equity'])
+                else:
+                    pass
+            # Get the updated portfolio and profile data
+            self.RetrievePortfolio()
+        except Exception as e:
+            raise StockAPIException(e)
