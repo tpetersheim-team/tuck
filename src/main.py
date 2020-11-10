@@ -15,11 +15,15 @@ import sys
 
 # Libraries
 from PyQt5.QtWidgets import (QAction, QApplication, QLabel, QMainWindow, QVBoxLayout)
+# from dependency_injector.wiring import Provide
 
 # Own modules
-from robinhoodAPI import RobinhoodAPI
+# from src.containers import Container
+# from screens.loginWindow import LoginWindow
 from screens.loginWindow import LoginWindow
-from stockAPI import StockAPI
+from services.portfolioManager import PortfolioManager
+from services.stock.robinhoodAPI import RobinhoodAPI
+from services.stock.stockAPI import StockAPI
 
 # Header release information
 __author__ = 'Travis Petersheim & Michael Reichenberger'
@@ -34,13 +38,24 @@ __status__ = 'prototype'
 class App(QMainWindow):
 # Functions
         # Initialization
-        def __init__(self):
+        # def __init__(self, portfolioManager: PortfolioManager = Provide[Container.portfolioManager]):
+        def __init__(self, portfolioManager: PortfolioManager = None):
                 super().__init__()
                 self.setWindowTitle("Tuck")
                 self.resize(640, 400)
-                self.stockAPI: StockAPI = RobinhoodAPI()
+
+                # TODO: Make this handle multiple stock providers
+                self.apiName = "robinhood" 
+                stockAPI: StockAPI = StockAPI()
+                if (self.apiName == "robinhood"):
+                        stockAPI = RobinhoodAPI()
+                self.portfolioManager = portfolioManager or PortfolioManager(stockAPI)
+
                 self.setupMenuBar()
                 self.main()
+
+        apiName: str
+        portfolioManager: PortfolioManager
 
         def setupMenuBar(self):
                 # Build the menu bar
@@ -81,17 +96,17 @@ class App(QMainWindow):
                 self.promptLoginIfNeeded()
         
         def logout(self):
-                self.stockAPI.Logout()
+                self.portfolioManager.Logout()
                 self.toggleLogin(False)
 
         def promptLoginIfNeeded(self):
-                if self.stockAPI.LoggedIn():
+                if self.portfolioManager.LoggedIn():
                         self.toggleLogin(True)
                 else:
                         self.showLoginWindow()
         
         def showLoginWindow(self):
-                self.loginWindow = LoginWindow(self, self.stockAPI)
+                self.loginWindow = LoginWindow(self, self.portfolioManager)
                 self.loginWindow.loginSuccess.connect(self.onLoginSuccessful)
                 self.loginWindow.show()
 
@@ -109,6 +124,12 @@ class App(QMainWindow):
 
  
 if __name__ == '__main__':
+    # Setup dependency injection with config
+#     container = Container()
+#     container.init_resources()
+#     container.config.from_ini('config/config.ini')
+#     container.wire(modules=[sys.modules[__name__]])
+
     app = QApplication(sys.argv)
     ex = App()
     sys.exit(app.exec_())
