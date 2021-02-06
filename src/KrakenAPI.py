@@ -14,8 +14,9 @@ import os
 import sys
 
 # Libraries
-import krakenex as kraken
+import krakenex
 from stockAPI import StockAPIException, StockAPI
+from tkinter.filedialog import askopenfilename
 
 # Own modules
 # None
@@ -40,20 +41,18 @@ class KrakenAPI(StockAPI):
                     password = os.environ.get("kraken_password"),
                     stayLoggedIn = True,
                     mfaCode = 'mfa'):
-        
-        # Set the username and password envinroment variables as passed in
-        os.environ["kraken_username"] = username
-        os.environ["kraken_password"] = password
-
-        # Grab the username and password environment variables
-        kraken_user = os.environ.get("kraken_username")
-        kraken_pass = os.environ.get("kraken_password")
-
-        # Try to login
+        self.k = krakenex.API()
+        # Kraken requires an API key to be generated on their website (https://support.kraken.com/hc/en-us/articles/360035317352-Generating-an-API-key-and-QR-code-for-the-Kraken-Pro-mobile-app)
         try:
-            #try to login
+            # Try to use an exisint login key
+            krakenKey = os.environ.get('kraken_key_loc')
+            self.k.load_key(krakenKey)
             return True
         except Exception as e:
+            # If an existing key has not been saved, find one
+            os.environ["kraken_key_loc"] = askopenfilename()
+            krakenKey = os.environ.get('kraken_key_loc')
+            self.k.load_key(krakenKey)
             raise StockAPIException(e)
 
     # Check if the user is currently logged in
@@ -68,89 +67,55 @@ class KrakenAPI(StockAPI):
     # Logs out of the Robinhood account
     def Logout(self):
         try:
-            rs.logout()
-        except Exception as e:
-            raise StockAPIException(e)
-
-    # Order by dollar amount
-    # These are market orders by default 
-    def OrderByDollar(self, symbol, dollars):
-        try:
-            #rs.orders.order_buy_fractional_by_price(symbol, dollars)
-            #share_price = float(rs.stocks.get_latest_price(symbol)[0])
-            #shares = str(dollars/share_price)
-            result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price) 
-            return(result)
-        except Exception as e:
-            raise StockAPIException(e)
-
-    # Order by shares
-    # These are market orders but can be fractional
-    def OrderByShare(self, symbol, quantity):
-        try:
-            #rs.orders.order_buy_fractional_by_quantity(symbol, quantity)
-            #share_price = float(rs.stocks.get_latest_price(symbol)[0])
-            #shares = quantity
-            result = "Successful order for: {} shares of {} at {}".format(shares, symbol, share_price) 
-            return(result)       
+            self.k.close()
         except Exception as e:
             raise StockAPIException(e)
 
     # Retrieve the current portfolio
-    # The build_holdings function returns a dictionary:
-    # Each holding is an item in the holdings dictionary
-    # Keys are the individual stocks
-    # Each stock is another dictionary with keys: 
-    # ['price', 'quantity', 'average_buy_price', 'equity', 'percent_change', 'equity_change', 'type', 'name', 'id', 'pe_ratio', 'percentage']
     def RetrievePortfolio(self):
         try:
-            # Pull down an update of the current holdings
-            self.portfolio = rs.build_holdings()
-            # Update the user profile
-            self.profile = rs.build_user_profile()
+            self.balance = self.k.query_private('Balance')['result']
+            self.orders = self.k.query_private('OpenOrders')['result']
         except Exception as e:
             raise StockAPIException(e)
 
-    # Tretrieve the current portfolio
-    # target_distribution must be provided as a dictionary of stocks with percentages
-    def RebalancePortfolio(self, target_distribution):
+    # Setup trading parameters
+    def SetupTrading(self):
         try:
-            orders = {}
-            # Get current portfolio and profile data
-            self.RetrievePortfolio()
-            # Determine the present distributions
-            # Robin Stocks is supposed to have determined the % of your portfolio but the number is wrong so we fix it :)
-            for name, stock in self.portfolio.items():
-                stock['percentage'] = float(stock['equity'])/float(self.profile['equity'])
-                # Positive differences = you have too much
-                # Negative differences = you need more
-                # All of this math is based on a percentage of your portfolio and will be multiplied out just as the
-                #   orders go through to avoid momentary fluctuations
-                # Assuming this stock is in the target distribution, this will work
-                try:
-                    difference = target_distribution[name]['percentage'] - stock['percentage']
-                # Otherwise set the difference to be the entire amount
-                except:
-                    difference = stock['percentage']
-                orders[name] = difference
-            for name, stock in target_distribution.items():
-                if stock.has_key(name):
-                    pass
-                else:
-                    orders[name] = -stock['percentage']
-            # Execute sells
-            for name, sell in orders.items():
-                if sell[''] > 0:
-                    self.OrderByDollar(name, sell*self.profile['equity'])
-                else:
-                    pass
-            # Execute buys
-            for name, buy in orders.items():
-                if buy < 0:
-                    self.OrderByDollar(name, buy*self.profile['equity'])
-                else:
-                    pass
-            # Get the updated portfolio and profile data
-            self.RetrievePortfolio()
+            self.purchaseType = 'limit'
+            self.price = '1'
+            return True
+        except Exception as e:
+            raise StockAPIException(e)
+
+    # Order by dollar amount
+    # These are market orders but can be limit
+    def OrderByDollar(self, symbol, dollars):
+        try:
+            volume = str(dollars/self.price)
+            self.k.query_private('AddOrder',
+                                {'pair': symbol,
+                                 'type': 'buy',
+                                 'ordertype': self.purchaseType,
+                                 'price': self.price,
+                                 'volume': volume})
+            result = "Successful order for: {} shares of {} at {}".format(volume, symbol, self.price) 
+            return(result)
+        except Exception as e:
+            raise StockAPIException(e)
+
+    # Order by crypto amount
+    # These are market orders but can be limit
+    def OrderByShare(self, symbol, quantity):
+        try:
+            volume = str(quantity)
+            self.k.query_private('AddOrder',
+                                {'pair': symbol,
+                                 'type': 'buy',
+                                 'ordertype': self.purchaseType,
+                                 'price': self.price,
+                                 'volume': volume})
+            result = "Successful order for: {} shares of {} at {}".format(volume, symbol, self.price) 
+            return(result)    
         except Exception as e:
             raise StockAPIException(e)
