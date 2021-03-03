@@ -15,10 +15,12 @@ import sys
 
 # Libraries
 import robin_stocks as rs
-from stockAPI import StockAPIException, StockAPI
 
 # Own modules
-# None
+from services.stock.stockAPI import StockAPI, StockAPIException
+from models.services.stock import Portfolio, Holding, Profile
+
+
 
 # Header release information
 __author__ = 'Travis Petersheim & Michael Reichenberger'
@@ -36,22 +38,14 @@ class RobinhoodAPI(StockAPI):
     # Login Function
     # This login function uses the environment variable username and password by default
     # However if a new username and password is passed in it saves it to the environment variable
-    def Login(self, username = os.environ.get("robinhood_username"),
-                    password = os.environ.get("robinhood_password"),
+    def Login(self, username = None,
+                    password = None,
                     stayLoggedIn = True,
                     mfaCode = 'mfa'):
         
-        # Set the username and password envinroment variables as passed in
-        os.environ["robinhood_username"] = username
-        os.environ["robinhood_password"] = password
-
-        # Grab the username and password environment variables
-        robin_user = os.environ.get("robinhood_username")
-        robin_pass = os.environ.get("robinhood_password")
-
         # Try to login
         try:
-            rs.login(robin_user, robin_pass, store_session = stayLoggedIn, mfa_code = mfaCode)
+            rs.login(username, password, store_session = stayLoggedIn, mfa_code = mfaCode)
             return True
         except Exception as e:
             raise StockAPIException(e)
@@ -62,7 +56,7 @@ class RobinhoodAPI(StockAPI):
         try:
             return self.Login('a', 'b')
         except Exception as e:
-            raise StockAPIException(e)
+            False
 
     # Logout Function
     # Logs out of the Robinhood account
@@ -102,55 +96,60 @@ class RobinhoodAPI(StockAPI):
     # Keys are the individual stocks
     # Each stock is another dictionary with keys: 
     # ['price', 'quantity', 'average_buy_price', 'equity', 'percent_change', 'equity_change', 'type', 'name', 'id', 'pe_ratio', 'percentage']
-    def RetrievePortfolio(self):
+    def RetrievePortfolio(self) -> Portfolio:
         try:
             # Pull down an update of the current holdings
-            self.portfolio = rs.build_holdings()
-            # Update the user profile
-            self.profile = rs.build_user_profile()
+            holdings: list[Holding] = map(lambda x: Portfolio(x["name"], x["equity"], x["price"], x["percentage"]), rs.build_holdings().items())
+            return Portfolio(holdings)
+        except Exception as e:
+            raise StockAPIException(e)
+        
+    def RetrieveProfile(self) -> Portfolio:
+        try:
+            return map(lambda x: Profile(x["equity"], x["cash"]), rs.build_user_profile().items())
         except Exception as e:
             raise StockAPIException(e)
 
     # Tretrieve the current portfolio
     # target_distribution must be provided as a dictionary of stocks with percentages
-    def RebalancePortfolio(self, target_distribution):
-        try:
-            orders = {}
-            # Get current portfolio and profile data
-            self.RetrievePortfolio()
-            # Determine the present distributions
-            # Robin Stocks is supposed to have determined the % of your portfolio but the number is wrong so we fix it :)
-            for name, stock in self.portfolio.items():
-                stock['percentage'] = float(stock['equity'])/float(self.profile['equity'])
-                # Positive differences = you have too much
-                # Negative differences = you need more
-                # All of this math is based on a percentage of your portfolio and will be multiplied out just as the
-                #   orders go through to avoid momentary fluctuations
-                # Assuming this stock is in the target distribution, this will work
-                try:
-                    difference = target_distribution[name]['percentage'] - stock['percentage']
-                # Otherwise set the difference to be the entire amount
-                except:
-                    difference = stock['percentage']
-                orders[name] = difference
-            for name, stock in target_distribution.items():
-                if stock.has_key(name):
-                    pass
-                else:
-                    orders[name] = -stock['percentage']
-            # Execute sells
-            for name, sell in orders.items():
-                if sell[''] > 0:
-                    self.OrderByDollar(name, sell*self.profile['equity'])
-                else:
-                    pass
-            # Execute buys
-            for name, buy in orders.items():
-                if buy < 0:
-                    self.OrderByDollar(name, buy*self.profile['equity'])
-                else:
-                    pass
-            # Get the updated portfolio and profile data
-            self.RetrievePortfolio()
-        except Exception as e:
-            raise StockAPIException(e)
+    # def RebalancePortfolio(self, target_distribution):
+    #     try:
+    #         orders = {}
+    #         # Get current portfolio and profile data
+    #         self.RetrievePortfolio()
+    #         # Determine the present distributions
+    #         # Robin Stocks is supposed to have determined the % of your portfolio but the number is wrong so we fix it :)
+    #         for name, stock in self.portfolio.items():
+    #             stock['percentage'] = float(stock['equity'])/float(self.profile['equity'])
+    #             # Positive differences = you have too much
+    #             # Negative differences = you need more
+    #             # All of this math is based on a percentage of your portfolio and will be multiplied out just as the
+    #             #   orders go through to avoid momentary fluctuations
+    #             # Assuming this stock is in the target distribution, this will work
+    #             try:
+    #                 difference = target_distribution[name]['percentage'] - stock['percentage']
+    #             # Otherwise set the difference to be the entire amount
+    #             except:
+    #                 difference = stock['percentage']
+    #             orders[name] = difference
+    #         for name, stock in target_distribution.items():
+    #             if stock.has_key(name):
+    #                 pass
+    #             else:
+    #                 orders[name] = -stock['percentage']
+    #         # Execute sells
+    #         for name, sell in orders.items():
+    #             if sell[''] > 0:
+    #                 self.OrderByDollar(name, sell*self.profile['equity'])
+    #             else:
+    #                 pass
+    #         # Execute buys
+    #         for name, buy in orders.items():
+    #             if buy < 0:
+    #                 self.OrderByDollar(name, buy*self.profile['equity'])
+    #             else:
+    #                 pass
+    #         # Get the updated portfolio and profile data
+    #         self.RetrievePortfolio()
+    #     except Exception as e:
+    #         raise StockAPIException(e)

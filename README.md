@@ -32,3 +32,8 @@ Run with
 ```
 python src/main.py
 ```
+
+Run tests
+```
+python -m pytest
+```

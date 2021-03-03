@@ -15,6 +15,9 @@ __maintainer__ = 'Travis Petersheim'
 __email__ = 'travispetersheim@gmail.com'
 __status__ = 'prototype'
 
+
+from models.services.stock import Profile, Portfolio
+
 # Generic Stock API class from which specific classes are based
 class StockAPI():
     # Initialization
@@ -36,11 +39,17 @@ class StockAPI():
     def OrderByShare(self, symbol, quantity):
         pass
 
-    def RetrievePortfolio(self):
+    def RetrievePortfolio(self) -> Portfolio:
         pass
 
-    def RebalancePortfolio(self):
+    def RetrieveProfile(self) -> Profile:
         pass
+
+    # def RebalancePortfolio(self):
+    #     pass
 
 class StockAPIException(Exception):
     pass
+
+    percentage: float
+

@@ -11,15 +11,14 @@ from __future__ import print_function
 # Built-in/Generic Imports
 import os
 import sys
-from typing import Text
-from PyQt5.QtCore import pyqtSignal
 
 # Libraries
 from PyQt5.QtWidgets import (QCheckBox, QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QWidget, QLineEdit)
+from PyQt5.QtCore import pyqtSignal
 
 # Own modules
-from stockAPI import StockAPI
+from services.stock.stockAPI import StockAPI
 from screens.utilities.alertUtility import AlertUtility
 
 # Header release information
