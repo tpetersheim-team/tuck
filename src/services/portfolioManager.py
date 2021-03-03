@@ -122,15 +122,16 @@ class PortfolioManager(BaseService):
                     difference = stock.percentage
                 orders[name] = difference
 
+            # What does this handle?
             for name, stock in target_distribution.items():
-                if stock.has_key(name):
+                if name in orders:
                     pass
                 else:
                     orders[name] = -stock.percentage
 
             # Execute sells
             for name, sell in orders.items():
-                if sell[''] > 0:
+                if sell > 0:
                     self.stockApi.OrderByDollar(name, sell*self.profile.equity)
                 else:
                     pass

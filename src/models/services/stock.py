@@ -1,6 +1,6 @@
 
 class Holding(object):
-    def __init__(self, name: str, equity: float, price: float, percentage: float) -> None:
+    def __init__(self, name: str, equity: float, price: float, percentage: float = 0) -> None:
         super().__init__()
         self.name = name
         self.equity = equity
